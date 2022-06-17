@@ -8,6 +8,9 @@
 // Sets default values
 ALIMCharacter::ALIMCharacter()
 {
+	Velocity = 0.0f;
+	MaxVelocity = 0.5f;
+
 	LIMCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	LIMCameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 
@@ -34,13 +37,34 @@ void ALIMCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void ALIMCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f) {
-		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-		AddMovementInput(Direction, Value/2.0f);
+	
+		FVector WorldDirection = {1.0f, 0.0f, 0.0f};
+
+		if (Value == 1.0f) {
+			MovementState = EMovementState::MOVEMENT_WALK_RIGHT;
+		}
+		else {
+			MovementState = EMovementState::MOVEMENT_WALK_LEFT;
+		}
+
+		AddMovementInput(WorldDirection, Value/2.0f);
+
 	}
 }
 
 void ALIMCharacter::TryJump()
 {
+	MovementState = EMovementState::MOVEMENT_JUMP;
 	Jump();
+}
+
+const FVector ALIMCharacter::GetCurrentVelocity() const
+{
+	return GetVelocity();
+}
+
+const EMovementState ALIMCharacter::GetMovementState() const
+{
+	return MovementState;
 }
 
