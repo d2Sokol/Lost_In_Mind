@@ -42,6 +42,8 @@ public:
 protected:
 	int PlayerKeysToGate;
 
+	bool bIsInGate;
+
 protected:
 
 	EMovementState MovementState;
@@ -55,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* InteractBox;
 
+	UPROPERTY(EditAnywhere, Category = "TSubclassOf")
+		TSubclassOf<ALevelGate> LevelGateClass;
+
 	ALevelGate* EndLevelGate;
 
 protected:
@@ -64,11 +69,17 @@ protected:
 	void MoveRight(float Value);
 	void TryJump();
 
+	void SetLevelGate();
+	void EnterGate();
+
 public:
 
 	const FVector GetCurrentVelocity() const;
 
 	const EMovementState GetMovementState() const;
+
+	UFUNCTION(BlueprintCallable)
+		int GetNumberOfNeededKeys();
 
 	UFUNCTION(BlueprintCallable)
 		FName GetGateWidgetText();

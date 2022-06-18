@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/BoxComponent.h"
 #include "../Public/LevelGate.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALIMCharacter::ALIMCharacter()
@@ -22,6 +23,7 @@ ALIMCharacter::ALIMCharacter()
 	InteractBox->SetupAttachment(RootComponent);
 
 	PlayerKeysToGate = 0;
+	bIsInGate = false;
 
 }
 
@@ -30,7 +32,7 @@ void ALIMCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-
+	SetLevelGate();
 }
 
 void ALIMCharacter::Tick(float DeltaSeconds)
@@ -47,6 +49,7 @@ void ALIMCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALIMCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ALIMCharacter::TryJump);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ALIMCharacter::EnterGate);
 }
 
 void ALIMCharacter::sInteractBox()
@@ -57,16 +60,15 @@ void ALIMCharacter::sInteractBox()
 
 	if (OverlappingActors.Num() != 0) {
 		for (auto Actor : OverlappingActors) {
-			EndLevelGate = Cast<ALevelGate>(Actor);
 			if (EndLevelGate != nullptr) {
 				EndLevelGate->SetGateWidgetVisibility(true);
-				UE_LOG(LogTemp, Warning, TEXT("Vis true"));
+				bIsInGate = true;
 			}
 			else {
 				UE_LOG(LogTemp, Warning, TEXT("Gate Not Found"));
 				if (EndLevelGate != nullptr) {
 					EndLevelGate->SetGateWidgetVisibility(false);
-					EndLevelGate = nullptr;
+					bIsInGate = false;
 				}
 			}
 		}
@@ -74,7 +76,7 @@ void ALIMCharacter::sInteractBox()
 	else {
 		if (EndLevelGate != nullptr) {
 			EndLevelGate->SetGateWidgetVisibility(false);
-			EndLevelGate = nullptr;
+			bIsInGate = true;
 		}
 	}
 }
@@ -101,6 +103,30 @@ void ALIMCharacter::TryJump()
 {
 	MovementState = EMovementState::MOVEMENT_JUMP;
 	Jump();
+	PlayerKeysToGate++;
+}
+
+void ALIMCharacter::SetLevelGate()
+{
+	TArray<AActor*> LevelGates;
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), LevelGateClass, LevelGates);
+
+	for (auto LevelGate : LevelGates) {
+		EndLevelGate = Cast<ALevelGate>(LevelGate);
+	}
+}
+
+void ALIMCharacter::EnterGate()
+{
+	if (bIsInGate) {
+		if (EndLevelGate->CanEnterGate(PlayerKeysToGate)) {
+			UE_LOG(LogTemp, Warning, TEXT("Entering gate..."))
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("You don't have enough keys!"))
+		}
+	}
 }
 
 const FVector ALIMCharacter::GetCurrentVelocity() const
@@ -113,9 +139,18 @@ const EMovementState ALIMCharacter::GetMovementState() const
 	return MovementState;
 }
 
-FName ALIMCharacter::GetGateWidgetText()
+int ALIMCharacter::GetNumberOfNeededKeys()
 {
-	return FName("Keys: "+PlayerKeysToGate);
+	if (EndLevelGate != nullptr) {
+		return EndLevelGate->GetNeededKeys();
+	}
+
+	return 0;
+}
+
+FName ALIMCharacter::GetGateWidgetText()
+{	
+	return FName(FString::FromInt(PlayerKeysToGate)+"/"+FString::FromInt(GetNumberOfNeededKeys()));
 }
 
 
