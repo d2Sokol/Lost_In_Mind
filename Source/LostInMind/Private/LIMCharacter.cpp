@@ -4,18 +4,25 @@
 #include "LIMCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/BoxComponent.h"
+#include "../Public/LevelGate.h"
 
 // Sets default values
 ALIMCharacter::ALIMCharacter()
 {
-	Velocity = 0.0f;
-	MaxVelocity = 0.5f;
+	PrimaryActorTick.bCanEverTick = true;
 
 	LIMCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	LIMCameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 
 	LIMCameraSpringArm->SetupAttachment(RootComponent);
 	LIMCamera->SetupAttachment(LIMCameraSpringArm);
+	
+	InteractBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractBox"));
+	InteractBox->SetupAttachment(RootComponent);
+
+	PlayerKeysToGate = 0;
+
 }
 
 // Called when the game starts or when spawned
@@ -23,6 +30,14 @@ void ALIMCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
+}
+
+void ALIMCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	sInteractBox();
 }
 
 // Called to bind functionality to input
@@ -32,6 +47,36 @@ void ALIMCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALIMCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ALIMCharacter::TryJump);
+}
+
+void ALIMCharacter::sInteractBox()
+{
+	TArray<AActor*> OverlappingActors;
+
+	InteractBox->GetOverlappingActors(OverlappingActors);
+
+	if (OverlappingActors.Num() != 0) {
+		for (auto Actor : OverlappingActors) {
+			EndLevelGate = Cast<ALevelGate>(Actor);
+			if (EndLevelGate != nullptr) {
+				EndLevelGate->SetGateWidgetVisibility(true);
+				UE_LOG(LogTemp, Warning, TEXT("Vis true"));
+			}
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("Gate Not Found"));
+				if (EndLevelGate != nullptr) {
+					EndLevelGate->SetGateWidgetVisibility(false);
+					EndLevelGate = nullptr;
+				}
+			}
+		}
+	}
+	else {
+		if (EndLevelGate != nullptr) {
+			EndLevelGate->SetGateWidgetVisibility(false);
+			EndLevelGate = nullptr;
+		}
+	}
 }
 
 void ALIMCharacter::MoveRight(float Value)
@@ -67,4 +112,10 @@ const EMovementState ALIMCharacter::GetMovementState() const
 {
 	return MovementState;
 }
+
+FName ALIMCharacter::GetGateWidgetText()
+{
+	return FName("Keys: "+PlayerKeysToGate);
+}
+
 

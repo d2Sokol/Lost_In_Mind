@@ -8,6 +8,8 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UBoxComponent;
+class ALevelGate;
 
 enum EMovementState {
 	MOVEMENT_IDLE = 0,
@@ -31,27 +33,33 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	virtual void Tick(float DeltaSeconds);
+
+public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Movement")
-		float Velocity;
-
-	UPROPERTY(EditAnywhere, Category = "Movement")
-		float MaxVelocity;
+	int PlayerKeysToGate;
 
 protected:
 
 	EMovementState MovementState;
 
 	UPROPERTY(EditAnywhere)
-	UCameraComponent* LIMCamera;
+		UCameraComponent* LIMCamera;
 
 	UPROPERTY(EditAnywhere)
-	USpringArmComponent* LIMCameraSpringArm;
+		USpringArmComponent* LIMCameraSpringArm;
+
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* InteractBox;
+
+	ALevelGate* EndLevelGate;
 
 protected:
+
+	void sInteractBox();
 
 	void MoveRight(float Value);
 	void TryJump();
@@ -61,5 +69,8 @@ public:
 	const FVector GetCurrentVelocity() const;
 
 	const EMovementState GetMovementState() const;
+
+	UFUNCTION(BlueprintCallable)
+		FName GetGateWidgetText();
 
 };
