@@ -65,7 +65,6 @@ void ALIMCharacter::sInteractBox()
 				bIsInGate = true;
 			}
 			else {
-				UE_LOG(LogTemp, Warning, TEXT("Gate Not Found"));
 				if (EndLevelGate != nullptr) {
 					EndLevelGate->SetGateWidgetVisibility(false);
 					bIsInGate = false;
@@ -108,12 +107,10 @@ void ALIMCharacter::TryJump()
 
 void ALIMCharacter::SetLevelGate()
 {
-	TArray<AActor*> LevelGates;
+	AActor* Gate = UGameplayStatics::GetActorOfClass(GetWorld(), LevelGateClass);
 
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), LevelGateClass, LevelGates);
-
-	for (auto LevelGate : LevelGates) {
-		EndLevelGate = Cast<ALevelGate>(LevelGate);
+	if (Gate != nullptr) {
+		EndLevelGate = Cast<ALevelGate>(Gate);
 	}
 }
 
