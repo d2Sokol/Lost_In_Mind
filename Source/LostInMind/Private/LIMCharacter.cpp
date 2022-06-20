@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/BoxComponent.h"
 #include "../Public/LevelGate.h"
+#include "../Public/GateKey.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -70,6 +71,10 @@ void ALIMCharacter::sInteractBox()
 					bIsInGate = false;
 				}
 			}
+			if (AGateKey* Key = Cast<AGateKey>(Actor)) {
+				Key->Destroy();
+				PlayerKeysToGate++;
+			}
 		}
 	}
 	else {
@@ -102,7 +107,6 @@ void ALIMCharacter::TryJump()
 {
 	MovementState = EMovementState::MOVEMENT_JUMP;
 	Jump();
-	PlayerKeysToGate++;
 }
 
 void ALIMCharacter::SetLevelGate()
