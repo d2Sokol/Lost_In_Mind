@@ -13,5 +13,9 @@ UCLASS()
 class LOSTINMIND_API ALostInMindGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+protected:
+	int LevelIndex = 0;
+public:
+	void LoadNextLevel();
 	
 };

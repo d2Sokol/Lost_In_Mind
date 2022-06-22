@@ -79,6 +79,9 @@ public:
 	const EMovementState GetMovementState() const;
 
 	UFUNCTION(BlueprintCallable)
+		int GetNumberOfPlayerKeys();
+
+	UFUNCTION(BlueprintCallable)
 		int GetNumberOfNeededKeys();
 
 	UFUNCTION(BlueprintCallable)

@@ -8,6 +8,7 @@
 #include "../Public/LevelGate.h"
 #include "../Public/GateKey.h"
 #include "Kismet/GameplayStatics.h"
+#include "../LostInMindGameModeBase.h"
 
 // Sets default values
 ALIMCharacter::ALIMCharacter()
@@ -74,6 +75,7 @@ void ALIMCharacter::sInteractBox()
 			if (AGateKey* Key = Cast<AGateKey>(Actor)) {
 				Key->Destroy();
 				PlayerKeysToGate++;
+				EndLevelGate->RefreshWidget();
 			}
 		}
 	}
@@ -122,7 +124,8 @@ void ALIMCharacter::EnterGate()
 {
 	if (bIsInGate) {
 		if (EndLevelGate->CanEnterGate(PlayerKeysToGate)) {
-			UE_LOG(LogTemp, Warning, TEXT("Entering gate..."))
+			ALostInMindGameModeBase* GameMode = Cast<ALostInMindGameModeBase>(GetWorld()->GetAuthGameMode());
+			GameMode->LoadNextLevel();
 		}
 		else {
 			UE_LOG(LogTemp, Warning, TEXT("You don't have enough keys!"))
@@ -138,6 +141,11 @@ const FVector ALIMCharacter::GetCurrentVelocity() const
 const EMovementState ALIMCharacter::GetMovementState() const
 {
 	return MovementState;
+}
+
+int ALIMCharacter::GetNumberOfPlayerKeys()
+{
+	return PlayerKeysToGate;
 }
 
 int ALIMCharacter::GetNumberOfNeededKeys()
