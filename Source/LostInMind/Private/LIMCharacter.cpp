@@ -5,9 +5,12 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "../Public/LevelGate.h"
 #include "../Public/GateKey.h"
-#include "Kismet/GameplayStatics.h"
+#include "../Public/Weapon.h"
+#include "../Public/MeleeWeapon.h"
+#include "../Public/PlayerInventory.h"
 #include "../LostInMindGameModeBase.h"
 
 // Sets default values
@@ -23,6 +26,8 @@ ALIMCharacter::ALIMCharacter()
 	
 	InteractBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractBox"));
 	InteractBox->SetupAttachment(RootComponent);
+
+	PlayerInventory = CreateDefaultSubobject<UPlayerInventory>(TEXT("PlayerInventoryComp"));
 
 	PlayerKeysToGate = 0;
 	bIsInGate = false;
@@ -52,6 +57,7 @@ void ALIMCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALIMCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ALIMCharacter::TryJump);
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ALIMCharacter::EnterGate);
+	PlayerInputComponent->BindAction("PickMeleeWeapon", IE_Pressed, this, &ALIMCharacter::PickWeaponFromInventory);
 }
 
 void ALIMCharacter::sInteractBox()
@@ -72,10 +78,19 @@ void ALIMCharacter::sInteractBox()
 					bIsInGate = false;
 				}
 			}
+
 			if (AGateKey* Key = Cast<AGateKey>(Actor)) {
 				Key->Destroy();
 				PlayerKeysToGate++;
 				EndLevelGate->RefreshWidget();
+			}
+
+			if (AWeapon* Weapon = Cast<AWeapon>(Actor)) {
+				if (!Weapon->bPickedUp) {
+					PlayerInventory->AddWeaponToInventory(Weapon);
+					Weapon->SetActorEnableCollision(false);
+					Weapon->SetActorHiddenInGame(true);
+				}
 			}
 		}
 	}
@@ -133,6 +148,20 @@ void ALIMCharacter::EnterGate()
 	}
 }
 
+void ALIMCharacter::PickWeaponFromInventory(FKey Key)
+{
+	PlayerInventory->PickWeaponFromInventory(this, Key);
+}
+
+void ALIMCharacter::UseWeapon(AWeapon* Weapon)
+{
+	if (Weapon != nullptr) {
+		Weapon->bPickedUp = true;
+		Weapon->SetActorEnableCollision(true);
+		Weapon->SetActorHiddenInGame(false);
+	}
+}
+
 const FVector ALIMCharacter::GetCurrentVelocity() const
 {
 	return GetVelocity();
@@ -156,10 +185,3 @@ int ALIMCharacter::GetNumberOfNeededKeys()
 
 	return 0;
 }
-
-FName ALIMCharacter::GetGateWidgetText()
-{	
-	return FName(FString::FromInt(PlayerKeysToGate)+"/"+FString::FromInt(GetNumberOfNeededKeys()));
-}
-
-

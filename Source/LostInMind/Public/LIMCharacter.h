@@ -10,6 +10,9 @@ class UCameraComponent;
 class USpringArmComponent;
 class UBoxComponent;
 class ALevelGate;
+class AWeapon;
+class AMeleeWeapon;
+class UPlayerInventory;
 
 enum EMovementState {
 	MOVEMENT_IDLE = 0,
@@ -55,6 +58,9 @@ protected:
 		USpringArmComponent* LIMCameraSpringArm;
 
 	UPROPERTY(EditAnywhere)
+		UPlayerInventory* PlayerInventory;
+
+	UPROPERTY(EditAnywhere)
 		UBoxComponent* InteractBox;
 
 	UPROPERTY(EditAnywhere, Category = "TSubclassOf")
@@ -72,7 +78,11 @@ protected:
 	void SetLevelGate();
 	void EnterGate();
 
+	void PickWeaponFromInventory(FKey Key);
+
 public:
+
+	void UseWeapon(AWeapon* Weapon);
 
 	const FVector GetCurrentVelocity() const;
 
@@ -83,8 +93,4 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		int GetNumberOfNeededKeys();
-
-	UFUNCTION(BlueprintCallable)
-		FName GetGateWidgetText();
-
 };
